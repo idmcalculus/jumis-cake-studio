@@ -11,7 +11,7 @@ import ProductDetail from "./pages/ProductDetail";
 import OrderFlow from "./pages/OrderFlow";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
-import Cart from "./pages/Cart";
+import Cart from "./pages/Cart.tsx";
 import Checkout from "./pages/Checkout";
 import Success from "./pages/Success";
 import Chatbot from "./components/chatbot/Chatbot";
