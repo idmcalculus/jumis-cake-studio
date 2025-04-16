@@ -1,11 +1,39 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    const updateCartCount = () => {
+      const savedCart = localStorage.getItem('cart');
+      if (savedCart) {
+        const cartItems = JSON.parse(savedCart);
+        setCartCount(cartItems.length);
+      } else {
+        setCartCount(0);
+      }
+    };
+
+    // Initial count
+    updateCartCount();
+
+    // Listen for storage changes
+    window.addEventListener('storage', updateCartCount);
+    
+    // Custom event for cart updates
+    window.addEventListener('cartUpdated', updateCartCount);
+
+    return () => {
+      window.removeEventListener('storage', updateCartCount);
+      window.removeEventListener('cartUpdated', updateCartCount);
+    };
+  }, []);
 
   return (
     <nav className="bg-white border-b border-brand-gray-100 sticky top-0 z-50">
@@ -35,7 +63,15 @@ const Navbar = () => {
             <Button asChild variant="ghost" className="relative">
               <Link to="/cart">
                 <ShoppingCart className="h-5 w-5" />
-                <span className="sr-only">Cart</span>
+                {cartCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                  >
+                    {cartCount}
+                  </Badge>
+                )}
+                <span className="sr-only">Cart ({cartCount} items)</span>
               </Link>
             </Button>
           </div>
@@ -91,9 +127,14 @@ const Navbar = () => {
               className="block px-3 py-2 rounded-md text-base font-medium text-brand-gray-500 hover:text-brand-orange"
               onClick={() => setIsOpen(false)}
             >
-              <div className="flex items-center">
-                <ShoppingCart className="h-5 w-5 mr-2" />
-                Cart
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <ShoppingCart className="h-5 w-5 mr-2" />
+                  Cart
+                </div>
+                {cartCount > 0 && (
+                  <Badge variant="destructive">{cartCount}</Badge>
+                )}
               </div>
             </Link>
           </div>

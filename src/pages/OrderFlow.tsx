@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import Layout from "@/components/layout/Layout";
 import { getProductById } from "@/utils/productData";
 import { calculateCakePrice, calculatePastryPrice } from "@/utils/priceCalculator";
@@ -103,6 +104,12 @@ const OrderFlow = () => {
     
     // Save cart to localStorage
     localStorage.setItem('cart', JSON.stringify(cart));
+    
+    // Show success toast
+    toast.success(`${product.name} added to cart`);
+    
+    // Dispatch custom event for cart update
+    window.dispatchEvent(new Event('cartUpdated'));
     
     // Navigate to cart
     navigate('/cart');

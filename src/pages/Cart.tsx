@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { CartItem, OrderSummary } from "@/utils/types";
@@ -29,17 +29,18 @@ const Cart = () => {
     }
   }, []);
   
-  // Update localStorage when cart changes
-  useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-    setSummary(calculateOrderSummary(cartItems));
-  }, [cartItems]);
-  
   // Remove item from cart
   const removeItem = (index: number) => {
     const newCart = [...cartItems];
+    const removedItem = newCart[index];
     newCart.splice(index, 1);
     setCartItems(newCart);
+    
+    // Show toast for removed item
+    toast.success(`${removedItem.name} removed from cart`);
+    
+    // Dispatch custom event for cart update
+    window.dispatchEvent(new Event('cartUpdated'));
   };
   
   // Update item quantity
@@ -47,12 +48,19 @@ const Cart = () => {
     if (quantity < 1) return;
     
     const newCart = [...cartItems];
+    const item = newCart[index];
     newCart[index].quantity = quantity;
     // Recalculate total price
     const baseItemPrice = newCart[index].totalPrice / newCart[index].quantity;
     newCart[index].totalPrice = baseItemPrice * quantity;
     
     setCartItems(newCart);
+    
+    // Show toast for quantity update
+    toast.success(`${item.name} quantity updated to ${quantity}`);
+    
+    // Dispatch custom event for cart update
+    window.dispatchEvent(new Event('cartUpdated'));
   };
   
   // Proceed to checkout
