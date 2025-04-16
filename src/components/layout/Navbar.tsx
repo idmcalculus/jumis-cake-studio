@@ -4,12 +4,19 @@ import { Link } from "react-router-dom";
 import { Menu, X, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetTrigger 
+} from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import "aos/dist/aos.css";
 import AOS from "aos";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const isMobile = useIsMobile();
 
   // Initialize AOS
   useEffect(() => {
@@ -45,6 +52,13 @@ const Navbar = () => {
       window.removeEventListener('cartUpdated', updateCartCount);
     };
   }, []);
+
+  const mobileMenuItems = [
+    { label: "Home", path: "/" },
+    { label: "Products", path: "/products" },
+    { label: "About", path: "/about" },
+    { label: "Contact", path: "/contact" },
+  ];
 
   return (
     <nav className="bg-white border-b border-brand-gray-100 sticky top-0 z-50">
@@ -89,68 +103,49 @@ const Navbar = () => {
           
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setIsOpen(!isOpen)}
-              aria-label="Toggle menu"
-            >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  aria-label="Toggle menu"
+                >
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[50%] sm:max-w-[50%]">
+                <div className="py-4">
+                  <div className="flex flex-col space-y-4">
+                    {mobileMenuItems.map((item) => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className="text-brand-gray-600 hover:text-brand-orange font-medium py-2"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                    <Link
+                      to="/cart"
+                      className="text-brand-gray-600 hover:text-brand-orange font-medium py-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <ShoppingCart className="h-5 w-5 mr-2" />
+                          Cart
+                        </div>
+                        {cartCount > 0 && (
+                          <Badge variant="destructive">{cartCount}</Badge>
+                        )}
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
-      
-      {/* Mobile menu */}
-      {isOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white shadow-lg">
-            <Link 
-              to="/" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-brand-gray-500 hover:text-brand-orange"
-              onClick={() => setIsOpen(false)}
-            >
-              Home
-            </Link>
-            <Link 
-              to="/products" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-brand-gray-500 hover:text-brand-orange"
-              onClick={() => setIsOpen(false)}
-            >
-              Products
-            </Link>
-            <Link 
-              to="/about" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-brand-gray-500 hover:text-brand-orange"
-              onClick={() => setIsOpen(false)}
-            >
-              About
-            </Link>
-            <Link 
-              to="/contact" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-brand-gray-500 hover:text-brand-orange"
-              onClick={() => setIsOpen(false)}
-            >
-              Contact
-            </Link>
-            <Link
-              to="/cart"
-              className="block px-3 py-2 rounded-md text-base font-medium text-brand-gray-500 hover:text-brand-orange"
-              onClick={() => setIsOpen(false)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <ShoppingCart className="h-5 w-5 mr-2" />
-                  Cart
-                </div>
-                {cartCount > 0 && (
-                  <Badge variant="destructive">{cartCount}</Badge>
-                )}
-              </div>
-            </Link>
-          </div>
-        </div>
-      )}
     </nav>
   );
 };

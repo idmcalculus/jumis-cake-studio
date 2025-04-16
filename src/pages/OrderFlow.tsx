@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -23,7 +24,7 @@ const OrderFlow = () => {
   
   const [quantity, setQuantity] = useState(1);
   // Cake customizations
-  const [cakeSize, setCakeSize] = useState<number>(6);
+  const [cakeSize, setCakeSize] = useState<number | string>(6);
   const [cakeLayers, setCakeLayers] = useState<number>(1);
   const [cakeFlavor, setCakeFlavor] = useState<string>("");
   const [cakeFrosting, setCakeFrosting] = useState<string>("");
@@ -31,6 +32,9 @@ const OrderFlow = () => {
   // Pastry customizations
   const [pastrySize, setPastrySize] = useState<'small' | 'midi' | 'large'>('small');
   const [cakeShape, setCakeShape] = useState<'round' | 'square' | 'heart' | 'custom'>('round');
+  // Custom inputs
+  const [customShape, setCustomShape] = useState('');
+  const [customSize, setCustomSize] = useState('');
   const [customFlavor, setCustomFlavor] = useState('');
   const [customFrosting, setCustomFrosting] = useState('');
   const [customDecorations, setCustomDecorations] = useState('');
@@ -58,10 +62,11 @@ const OrderFlow = () => {
     if (!product) return 0;
 
     if (isCake(product as any)) {
+      let finalSize = typeof cakeSize === 'number' ? cakeSize : 8; // Default to 8 inches for custom sizes
       return calculateCakePrice(
         (product as CakeProduct).price, 
         (product as CakeProduct).cakeType,
-        cakeSize,
+        finalSize,
         cakeLayers
       );
     } else if (isPastry(product as any)) {
@@ -95,7 +100,7 @@ const OrderFlow = () => {
     if (isCake(product)) {
       cartItem.customizations = {
         shape: cakeShape,
-        size: cakeSize,
+        size: cakeSize === 'custom' ? customSize : cakeSize,
         layers: cakeLayers,
         flavor: cakeFlavor === 'custom' ? customFlavor : cakeFlavor,
         frosting: cakeFrosting === 'custom' ? customFrosting : cakeFrosting,
@@ -188,14 +193,28 @@ const OrderFlow = () => {
                             <SelectItem value="custom">Custom Shape</SelectItem>
                           </SelectContent>
                         </Select>
+                        
+                        {cakeShape === 'custom' && (
+                          <CustomOptionInput
+                            label="Shape"
+                            value={customShape}
+                            onChange={setCustomShape}
+                          />
+                        )}
                       </div>
 
                       {/* Cake size */}
                       <div data-aos="fade-up" data-aos-delay="100">
                         <Label htmlFor="cake-size">Cake Size (inches)</Label>
                         <Select 
-                          value={cakeSize.toString()} 
-                          onValueChange={(value) => setCakeSize(parseInt(value))}
+                          value={typeof cakeSize === 'number' ? cakeSize.toString() : cakeSize} 
+                          onValueChange={(value) => {
+                            if (value === 'custom') {
+                              setCakeSize('custom');
+                            } else {
+                              setCakeSize(parseInt(value));
+                            }
+                          }}
                         >
                           <SelectTrigger id="cake-size" className="w-full">
                             <SelectValue placeholder="Select size" />
@@ -208,8 +227,18 @@ const OrderFlow = () => {
                             <SelectItem value="10">10 inches</SelectItem>
                             <SelectItem value="11">11 inches</SelectItem>
                             <SelectItem value="12">12 inches</SelectItem>
+                            <SelectItem value="custom">Custom Size</SelectItem>
                           </SelectContent>
                         </Select>
+                        
+                        {cakeSize === 'custom' && (
+                          <CustomOptionInput
+                            label="Size"
+                            value={customSize}
+                            onChange={setCustomSize}
+                          />
+                        )}
+                        
                         <p className="text-sm text-brand-gray-500 mt-1">
                           {product.cakeType === 'round' ? 
                             'Round cakes start at £15 for 6 inches' : 
@@ -418,8 +447,12 @@ const OrderFlow = () => {
                       {isCake(product) && (
                         <>
                           <div className="flex justify-between">
+                            <span>Shape:</span>
+                            <span>{cakeShape === 'custom' ? `Custom (${customShape})` : cakeShape}</span>
+                          </div>
+                          <div className="flex justify-between">
                             <span>Size:</span>
-                            <span>{cakeSize} inches</span>
+                            <span>{cakeSize === 'custom' ? `Custom (${customSize})` : `${cakeSize} inches`}</span>
                           </div>
                           <div className="flex justify-between">
                             <span>Layers:</span>
@@ -427,18 +460,18 @@ const OrderFlow = () => {
                           </div>
                           <div className="flex justify-between">
                             <span>Flavor:</span>
-                            <span>{cakeFlavor || product.flavors[0]}</span>
+                            <span>{cakeFlavor === 'custom' ? `Custom (${customFlavor})` : (cakeFlavor || product.flavors[0])}</span>
                           </div>
                           {product.frostings && (
                             <div className="flex justify-between">
                               <span>Frosting:</span>
-                              <span>{cakeFrosting || product.frostings[0]}</span>
+                              <span>{cakeFrosting === 'custom' ? `Custom (${customFrosting})` : (cakeFrosting || product.frostings[0])}</span>
                             </div>
                           )}
                           {product.decorOptions && cakeDecorations && (
                             <div className="flex justify-between">
                               <span>Decorations:</span>
-                              <span>{cakeDecorations || product.decorOptions[0]}</span>
+                              <span>{cakeDecorations === 'custom' ? `Custom (${customDecorations})` : cakeDecorations}</span>
                             </div>
                           )}
                         </>
