@@ -4,6 +4,16 @@
 
 @layer base {
   :root {
+    /* Brand Colors */
+    --brand-orange: #FF5900;
+    --brand-white: #FFFFFF;
+    --brand-gray-100: #F1F1F1;
+    --brand-gray-200: #C8C8C9;
+    --brand-gray-300: #8E9196;
+    --brand-gray-400: #8A898C;
+    --brand-gray-500: #555555;
+    --brand-gray-600: #333333;
+    --brand-gray-700: #222222;
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
@@ -52,6 +62,17 @@
   }
 
   .dark {
+    /* Brand Colors for Dark Mode (adjusted for accessibility) */
+    --brand-orange: #F86D22; /* Slightly lighter for dark backgrounds */
+    --brand-white: #FFFFFF;
+    --brand-gray-100: #222222;
+    --brand-gray-200: #333333;
+    --brand-gray-300: #555555;
+    --brand-gray-400: #8A898C;
+    --brand-gray-500: #8E9196;
+    --brand-gray-600: #C8C8C9;
+    --brand-gray-700: #F1F1F1;
+
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 

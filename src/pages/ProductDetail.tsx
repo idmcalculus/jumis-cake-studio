@@ -1,10 +1,9 @@
-
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { getProductById } from "@/utils/productData";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { CakeProduct, PastryProduct } from "@/utils/types";
+import { CakeProduct, PastryProduct, Product } from "@/utils/types";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,7 +16,7 @@ const ProductDetail = () => {
     return (
       <Layout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <p className="text-center text-xl text-brand-gray-500">Product not found.</p>
+          <p className="text-center text-xl text-muted-foreground">Product not found.</p>
           <div className="text-center mt-4">
             <Button asChild variant="outline">
               <Link to="/products">Back to Products</Link>
@@ -29,18 +28,18 @@ const ProductDetail = () => {
   }
   
   // Type guard to check if product is a cake
-  const isCake = (product: any): product is CakeProduct => {
-    return product.cakeType !== undefined;
+  const isCake = (product: Product): product is CakeProduct => {
+    return 'cakeType' in product;
   };
   
   // Type guard to check if product is a pastry
-  const isPastry = (product: any): product is PastryProduct => {
-    return product.sizes !== undefined || product.packQuantity !== undefined;
+  const isPastry = (product: Product): product is PastryProduct => {
+    return 'sizes' in product || 'packQuantity' in product;
   };
   
   return (
     <Layout>
-      <div className="bg-white py-8">
+      <div className="bg-background py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-6">
             <Button 
@@ -65,43 +64,41 @@ const ProductDetail = () => {
             
             {/* Product Details */}
             <div>
-              <h1 className="text-3xl font-bold text-brand-gray-700">{product.name}</h1>
+              <h1 className="text-3xl font-bold text-foreground mb-4">{product.name}</h1>
               <p className="text-xl text-brand-orange font-semibold mt-2">
                 From £{product.price.toFixed(2)}
               </p>
-              <div className="mt-4 prose text-brand-gray-600">
-                <p>{product.description}</p>
-              </div>
+              <p className="text-lg text-muted-foreground mb-6">{product.description}</p>
               
               {/* Cake specific details */}
               {isCake(product) && (
                 <div className="mt-6 space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-brand-gray-700">Available Flavors</h3>
+                    <h3 className="text-xl font-semibold text-foreground mb-4">Available Flavors</h3>
                     <ul className="mt-2 grid grid-cols-2 gap-2">
                       {product.flavors.map((flavor, index) => (
-                        <li key={index} className="text-brand-gray-600">• {flavor}</li>
+                        <li key={index} className="text-muted-foreground">• {flavor}</li>
                       ))}
                     </ul>
                   </div>
                   
                   {product.frostings && (
                     <div>
-                      <h3 className="text-lg font-semibold text-brand-gray-700">Frosting Options</h3>
+                      <h3 className="text-xl font-semibold text-foreground mb-4">Frosting Options</h3>
                       <ul className="mt-2 grid grid-cols-2 gap-2">
                         {product.frostings.map((frosting, index) => (
-                          <li key={index} className="text-brand-gray-600">• {frosting}</li>
+                          <li key={index} className="text-muted-foreground">• {frosting}</li>
                         ))}
                       </ul>
                     </div>
                   )}
                   
                   <div>
-                    <h3 className="text-lg font-semibold text-brand-gray-700">Cake Details</h3>
+                    <h3 className="text-xl font-semibold text-foreground mb-4">Cake Details</h3>
                     <ul className="mt-2">
-                      <li className="text-brand-gray-600">Type: {product.cakeType.charAt(0).toUpperCase() + product.cakeType.slice(1)}</li>
-                      <li className="text-brand-gray-600">Base Size: {product.baseSizeInches} inches</li>
-                      <li className="text-brand-gray-600">Max Layers: {product.maxLayers}</li>
+                      <li className="text-muted-foreground">Type: {product.cakeType.charAt(0).toUpperCase() + product.cakeType.slice(1)}</li>
+                      <li className="text-muted-foreground">Base Size: {product.baseSizeInches} inches</li>
+                      <li className="text-muted-foreground">Max Layers: {product.maxLayers}</li>
                     </ul>
                   </div>
                 </div>
@@ -112,16 +109,16 @@ const ProductDetail = () => {
                 <div className="mt-6">
                   {product.sizes && (
                     <div>
-                      <h3 className="text-lg font-semibold text-brand-gray-700">Available Sizes</h3>
+                      <h3 className="text-xl font-semibold text-foreground mb-4">Available Sizes</h3>
                       <ul className="mt-2">
                         {product.sizes.small?.available && (
-                          <li className="text-brand-gray-600">Small: £{product.sizes.small.price.toFixed(2)}</li>
+                          <li className="text-muted-foreground">Small: £{product.sizes.small.price.toFixed(2)}</li>
                         )}
                         {product.sizes.midi?.available && (
-                          <li className="text-brand-gray-600">Midi: £{product.sizes.midi.price.toFixed(2)}</li>
+                          <li className="text-muted-foreground">Midi: £{product.sizes.midi.price.toFixed(2)}</li>
                         )}
                         {product.sizes.large?.available && (
-                          <li className="text-brand-gray-600">Large: £{product.sizes.large.price.toFixed(2)}</li>
+                          <li className="text-muted-foreground">Large: £{product.sizes.large.price.toFixed(2)}</li>
                         )}
                       </ul>
                     </div>
@@ -129,8 +126,8 @@ const ProductDetail = () => {
                   
                   {product.packQuantity && (
                     <div className="mt-4">
-                      <h3 className="text-lg font-semibold text-brand-gray-700">Pack Details</h3>
-                      <p className="text-brand-gray-600">Sold in packs of {product.packQuantity}</p>
+                      <h3 className="text-xl font-semibold text-foreground mb-4">Pack Details</h3>
+                      <p className="text-muted-foreground mb-4">Sold in packs of {product.packQuantity}</p>
                     </div>
                   )}
                 </div>

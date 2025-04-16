@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# windsurf rules
+.windsurfrules
+jumis_cake_studio_prd.md

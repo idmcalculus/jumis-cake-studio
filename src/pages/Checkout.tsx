@@ -1,438 +1,461 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm, SubmitHandler, FieldErrors } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
+import { CreateOrderData, CreateOrderActions, OnApproveData, OnApproveActions } from '@paypal/paypal-js';
 
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import Layout from "@/components/layout/Layout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CartItem, OrderSummary } from "@/utils/types";
-import { calculateOrderSummary } from "@/utils/priceCalculator";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { ArrowLeft } from "lucide-react";
-import { loadStripe } from "@stripe/stripe-js";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from '@/components/ui/use-toast';
+import { CartItem } from '@/utils/types';
 
-const stripePromise = loadStripe('pk_test_TYooMQauvdEDq54NiTphI7jx'); // Replace with your Stripe publishable key
+interface PaymentIntentPayload {
+  amount: number;
+  currency: string;
+  receipt_email: string;
+  shipping: {
+    name: string;
+    address: {
+      line1: string;
+      city: string;
+      postal_code: string;
+      country: string;
+    };
+  };
+  metadata?: { [key: string]: string };
+}
 
-const Checkout = () => {
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
+const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || '';
+
+const checkoutSchema = z.object({
+  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
+  email: z.string().email({ message: 'Invalid email address.' }),
+  address: z.string().min(5, { message: 'Address must be at least 5 characters.' }),
+  city: z.string().min(2, { message: 'City must be at least 2 characters.' }),
+  postalCode: z.string().min(4, { message: 'Postal code must be at least 4 characters.' }),
+  country: z.string().min(2, { message: 'Country must be at least 2 characters.' }),
+});
+
+type CheckoutFormValues = z.infer<typeof checkoutSchema>;
+
+const createPaymentIntent = async (payload: PaymentIntentPayload): Promise<{ clientSecret: string }> => {
+  console.log('Calling backend to create Stripe Payment Intent with payload:', payload);
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  if (!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) {
+      throw new Error('Stripe Publishable Key not found. Cannot simulate payment intent.');
+  }
+  return { clientSecret: 'pi_test_secret_dummy12345_' + Date.now() };
+};
+
+const createPaypalOrder = async (amount: number, currency: string): Promise<string> => {
+    console.log('Calling backend to create PayPal order:', { amount, currency });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return 'test_paypal_order_id_' + Date.now();
+};
+
+const capturePaypalOrder = async (orderId: string): Promise<any> => {
+    console.log('Calling backend to capture PayPal order:', { orderId });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log('Order captured (simulated)');
+    return { status: 'COMPLETED' };
+};
+
+const finalizeOrder = async (paymentDetails: any, formData: CheckoutFormValues, cart: CartItem[]): Promise<{ orderId: string }> => {
+    console.log('Calling backend to finalize order:', { paymentDetails, formData, cart });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return { orderId: `order_${Date.now()}` };
+}
+
+interface StripeFormProps {
+  totalAmount: number;
+  currency: string;
+  formData: CheckoutFormValues | null;
+  cart: CartItem[];
+  onPaymentSuccess: (details: any) => void;
+  onError: (message: string) => void;
+  isProcessing: boolean;
+  setIsProcessing: (isProcessing: boolean) => void;
+}
+
+const StripeCheckoutForm: React.FC<StripeFormProps> = ({ totalAmount, currency, formData, cart, onPaymentSuccess, onError, isProcessing, setIsProcessing }) => {
+  const stripe = useStripe();
+  const elements = useElements();
+
+  const handleStripeSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!stripe || !elements || !formData || isProcessing) {
+      if (!formData) {
+        onError('Please fill in shipping details first.');
+      }
+      return;
+    }
+
+    setIsProcessing(true);
+    const cardElement = elements.getElement(CardElement);
+
+    if (!cardElement) {
+      onError('Card details element not found.');
+      setIsProcessing(false);
+      return;
+    }
+
+    try {
+      // 1. Create Payment Intent on the backend
+      const { clientSecret } = await createPaymentIntent({
+        amount: Math.round(totalAmount * 100), // Stripe expects amount in cents
+        currency: currency.toLowerCase(),
+        receipt_email: formData.email,
+        shipping: {
+            name: formData.name,
+            address: {
+                line1: formData.address,
+                city: formData.city,
+                postal_code: formData.postalCode,
+                country: formData.country
+            }
+        },
+        metadata: { cartItems: JSON.stringify(cart.map(item => `${item.productId}x${item.quantity}`)) }
+      });
+
+      // 2. Confirm Card Payment on the frontend
+      const paymentResult = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            name: formData.name,
+            email: formData.email,
+            address: {
+              line1: formData.address,
+              city: formData.city,
+              postal_code: formData.postalCode,
+              country: formData.country,
+            },
+          },
+        },
+      });
+
+      if (paymentResult.error) {
+        onError(paymentResult.error.message || 'An unexpected error occurred with Stripe.');
+        setIsProcessing(false);
+      } else {
+        if (paymentResult.paymentIntent.status === 'succeeded') {
+          console.log('Stripe Payment Succeeded:', paymentResult.paymentIntent);
+          // Let the main component handle finalization and navigation
+          onPaymentSuccess({ type: 'stripe', details: paymentResult.paymentIntent });
+        } else {
+          onError(`Payment status: ${paymentResult.paymentIntent.status}`);
+          setIsProcessing(false);
+        }
+      }
+    } catch (error: any) {
+      console.error('Stripe processing error:', error);
+      onError(error.message || 'Failed to process Stripe payment.');
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleStripeSubmit}>
+      <Label htmlFor="card-element">Card Details</Label>
+      <div id="card-element" className="p-3 border rounded-md mt-1 mb-4 bg-background">
+          {/* Add appearance API options here if needed */}
+          <CardElement options={{ style: { base: { fontSize: '16px' } } }} />
+      </div>
+      <Button type="submit" disabled={!stripe || isProcessing || !formData} className="w-full">
+        {isProcessing ? 'Processing...' : `Pay $${totalAmount.toFixed(2)}`}
+      </Button>
+       {!formData && <p className="text-red-500 text-sm mt-1">Please fill in shipping details above.</p>}
+    </form>
+  );
+};
+
+const Checkout: React.FC = () => {
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [totalAmount, setTotalAmount] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [currentFormData, setCurrentFormData] = useState<CheckoutFormValues | null>(null);
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [summary, setSummary] = useState<OrderSummary>({
-    subtotal: 0,
-    discount: 0,
-    discountPercentage: 0,
-    total: 0
+  const { toast } = useToast();
+
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<CheckoutFormValues>({
+    resolver: zodResolver(checkoutSchema),
   });
-  
-  const [isProcessing, setIsProcessing] = useState(false);
-  
-  // Form state
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    postcode: "",
-    sameAsShipping: true,
-    paymentMethod: "card",
-    deliveryMethod: "standard",
-    deliveryDate: "",
-    specialInstructions: ""
-  });
-  
-  // Load cart items from localStorage
+  const formErrors: FieldErrors<CheckoutFormValues> = errors;
+
+  const watchedValues = watch();
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      const parsedCart: CartItem[] = JSON.parse(savedCart);
+    if (watchedValues && Object.keys(watchedValues).length > 0) {
+       setCurrentFormData(watchedValues);
+    }
+  }, [watchedValues]);
+
+  useEffect(() => {
+    const storedCart = localStorage.getItem('cartItems');
+    if (storedCart) {
+      const parsedCart: CartItem[] = JSON.parse(storedCart);
       if (parsedCart.length === 0) {
-        // Redirect to cart if empty
-        navigate('/cart');
+        toast({ title: 'Your cart is empty.', description: 'Redirecting to products...', variant: 'default' });
+        navigate('/products');
         return;
       }
-      setCartItems(parsedCart);
-      setSummary(calculateOrderSummary(parsedCart));
+      setCart(parsedCart);
+      const total = parsedCart.reduce((sum, item) => sum + item.totalPrice, 0);
+      setTotalAmount(total);
     } else {
-      navigate('/cart');
+      toast({ title: 'Your cart is empty.', description: 'Redirecting to products...', variant: 'default' });
+      navigate('/products');
     }
-  }, [navigate]);
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    setIsLoading(false);
+  }, [navigate, toast]);
+
+  const calculateTotal = (items: CartItem[]) => {
+    const total = items.reduce((sum, item) => sum + item.totalPrice, 0);
+    return total;
   };
-  
-  const handleCheckboxChange = (checked: boolean) => {
-    setFormData({
-      ...formData,
-      sameAsShipping: checked
-    });
-  };
-  
-  const handlePaymentMethodChange = (value: string) => {
-    setFormData({
-      ...formData,
-      paymentMethod: value
-    });
-  };
-  
-  const handleDeliveryMethodChange = (value: string) => {
-    setFormData({
-      ...formData,
-      deliveryMethod: value
-    });
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
-    
-    // In a real app, you'd validate the form and process payment
-    // Here we'll simulate payment processing
+
+  const handlePaymentSuccess = async (paymentDetails: any) => {
+    console.log('Payment successful, finalizing order...');
+    if (!currentFormData) {
+        toast({ title: 'Error', description: 'Form data is missing.', variant: 'destructive' });
+        setIsProcessing(false);
+        return;
+    }
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Clear the cart
-      localStorage.removeItem('cart');
-      
-      // Redirect to success page
-      navigate('/success');
-    } catch (error) {
-      console.error("Payment processing error:", error);
-      setIsProcessing(false);
-      // In a real app, you'd show an error message
+        const { orderId } = await finalizeOrder(paymentDetails, currentFormData, cart);
+
+        toast({ title: 'Payment Successful!', description: `Order ${orderId} confirmed.` });
+        localStorage.removeItem('cartItems');
+        window.dispatchEvent(new Event('cartUpdated'));
+        navigate(`/success?orderId=${orderId}`);
+    } catch (error: any) {
+        console.error('Order finalization failed:', error);
+        toast({ title: 'Order Finalization Failed', description: error.message || 'Could not finalize your order. Please contact support.', variant: 'destructive' });
+        setIsProcessing(false);
     }
   };
-  
-  // Calculate total items
-  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  
+
+  const handlePaymentError = (message: string) => {
+    toast({ title: 'Payment Failed', description: message, variant: 'destructive' });
+    setIsProcessing(false);
+  };
+
+  const onSubmit: SubmitHandler<CheckoutFormValues> = (data) => {
+    console.log('Form submitted:', data);
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (cart.length === 0 && !isLoading) {
+    return <div>Cart is empty.</div>;
+  }
+
+  if (!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY) {
+    return <div>Stripe Publishable Key not found.</div>;
+  }
+  if (!paypalClientId) {
+    return <div>PayPal Client ID not found.</div>;
+  }
+
+  const paypalOptions = {
+      clientId: paypalClientId,
+      currency: 'USD',
+      intent: 'capture',
+  };
+
   return (
-    <Layout>
-      <div className="bg-brand-gray-100 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-6">
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
-              asChild
-            >
-              <Link to="/cart">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Cart
-              </Link>
-            </Button>
-          </div>
-          
-          <h1 className="text-3xl font-bold text-brand-gray-700 mb-8">Checkout</h1>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main checkout form */}
-            <div className="lg:col-span-2">
-              <form onSubmit={handleSubmit}>
-                {/* Shipping Information */}
-                <Card className="mb-8">
-                  <CardContent className="p-6">
-                    <h2 className="text-xl font-semibold text-brand-gray-700 mb-4">Shipping Information</h2>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
-                        <Input
-                          id="firstName"
-                          name="firstName"
-                          value={formData.firstName}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
-                        <Input
-                          id="lastName"
-                          name="lastName"
-                          value={formData.lastName}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number</Label>
-                        <Input
-                          id="phone"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
+    <PayPalScriptProvider options={paypalOptions}>
+      <div className="container mx-auto p-4 md:p-8">
+        <h1 className="text-3xl font-bold mb-6">Checkout</h1>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Shipping Information</CardTitle>
+                <CardDescription>Enter your delivery details.</CardDescription>
+              </CardHeader>
+              <form onSubmit={handleSubmit(onSubmit)} id="shipping-form">
+                <CardContent className="space-y-4">
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input id="name" {...register('name')} />
+                      {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
                     </div>
-                    
-                    <div className="mt-4 space-y-2">
-                      <Label htmlFor="address">Address</Label>
-                      <Input
-                        id="address"
-                        name="address"
-                        value={formData.address}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="city">City</Label>
-                        <Input
-                          id="city"
-                          name="city"
-                          value={formData.city}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="postcode">Postcode</Label>
-                        <Input
-                          id="postcode"
-                          name="postcode"
-                          value={formData.postcode}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="mt-4 flex items-center space-x-2">
-                      <Checkbox
-                        id="sameAsShipping"
-                        checked={formData.sameAsShipping}
-                        onCheckedChange={handleCheckboxChange}
-                      />
-                      <Label htmlFor="sameAsShipping">Billing address is the same as shipping address</Label>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Delivery Options */}
-                <Card className="mb-8">
-                  <CardContent className="p-6">
-                    <h2 className="text-xl font-semibold text-brand-gray-700 mb-4">Delivery Options</h2>
-                    
-                    <RadioGroup
-                      value={formData.deliveryMethod}
-                      onValueChange={handleDeliveryMethodChange}
-                      className="space-y-3"
-                    >
-                      <div className="flex items-center justify-between border p-4 rounded-md">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="standard" id="standard" />
-                          <Label htmlFor="standard" className="cursor-pointer">
-                            <div>
-                              <p className="font-medium">Standard Delivery</p>
-                              <p className="text-sm text-brand-gray-500">3-5 business days</p>
-                            </div>
-                          </Label>
-                        </div>
-                        <p className="text-brand-orange font-medium">Free</p>
-                      </div>
-                      
-                      <div className="flex items-center justify-between border p-4 rounded-md">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="express" id="express" />
-                          <Label htmlFor="express" className="cursor-pointer">
-                            <div>
-                              <p className="font-medium">Express Delivery</p>
-                              <p className="text-sm text-brand-gray-500">1-2 business days</p>
-                            </div>
-                          </Label>
-                        </div>
-                        <p className="text-brand-orange font-medium">£5.99</p>
-                      </div>
-                      
-                      <div className="flex items-center justify-between border p-4 rounded-md">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="pickup" id="pickup" />
-                          <Label htmlFor="pickup" className="cursor-pointer">
-                            <div>
-                              <p className="font-medium">Store Pickup</p>
-                              <p className="text-sm text-brand-gray-500">Ready in 24 hours</p>
-                            </div>
-                          </Label>
-                        </div>
-                        <p className="text-brand-orange font-medium">Free</p>
-                      </div>
-                    </RadioGroup>
-                    
-                    <div className="mt-4 space-y-2">
-                      <Label htmlFor="deliveryDate">Preferred Delivery/Pickup Date</Label>
-                      <Input
-                        id="deliveryDate"
-                        name="deliveryDate"
-                        type="date"
-                        value={formData.deliveryDate}
-                        onChange={handleChange}
-                        required
-                        min={new Date().toISOString().split('T')[0]}
-                      />
-                    </div>
-                    
-                    <div className="mt-4 space-y-2">
-                      <Label htmlFor="specialInstructions">Special Instructions (Optional)</Label>
-                      <textarea
-                        id="specialInstructions"
-                        name="specialInstructions"
-                        value={formData.specialInstructions}
-                        onChange={handleChange}
-                        className="w-full min-h-[100px] p-2 border border-brand-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-orange"
-                      ></textarea>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Payment Method */}
-                <Card className="mb-8">
-                  <CardContent className="p-6">
-                    <h2 className="text-xl font-semibold text-brand-gray-700 mb-4">Payment Method</h2>
-                    
-                    <RadioGroup
-                      value={formData.paymentMethod}
-                      onValueChange={handlePaymentMethodChange}
-                      className="space-y-3"
-                    >
-                      <div className="flex items-center border p-4 rounded-md">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="card" id="card" />
-                          <Label htmlFor="card" className="cursor-pointer">
-                            <div>
-                              <p className="font-medium">Credit / Debit Card</p>
-                              <p className="text-sm text-brand-gray-500">Visa, Mastercard, American Express</p>
-                            </div>
-                          </Label>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center border p-4 rounded-md">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="paypal" id="paypal" />
-                          <Label htmlFor="paypal" className="cursor-pointer">
-                            <div>
-                              <p className="font-medium">PayPal</p>
-                              <p className="text-sm text-brand-gray-500">Pay with your PayPal account</p>
-                            </div>
-                          </Label>
-                        </div>
-                      </div>
-                    </RadioGroup>
-                    
-                    {/* For this demo, we'll simulate payment processing */}
-                    {/* In a real app, you would integrate with Stripe Elements or use PayPal SDK */}
-                    {formData.paymentMethod === 'card' && (
-                      <div className="mt-4 p-4 border border-brand-gray-200 rounded-md bg-brand-gray-50">
-                        <p className="text-brand-gray-500 text-sm">
-                          In a production environment, this would be replaced with a secure credit card form.
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-                
-                <Button
-                  type="submit"
-                  className="w-full bg-brand-orange hover:bg-brand-orange/90 text-lg py-6"
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? "Processing..." : `Complete Order: £${summary.total.toFixed(2)}`}
-                </Button>
-              </form>
-            </div>
-            
-            {/* Order Summary */}
-            <div className="lg:col-span-1">
-              <Card className="sticky top-20">
-                <CardContent className="p-6">
-                  <h2 className="text-xl font-semibold text-brand-gray-700 mb-4">Order Summary</h2>
-                  
-                  {/* Order details */}
-                  <div className="space-y-4">
-                    <div className="flex justify-between text-brand-gray-600">
-                      <p>Items ({totalItems})</p>
-                      <p>£{summary.subtotal.toFixed(2)}</p>
-                    </div>
-                    
-                    {summary.discount > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <p>Discount ({summary.discountPercentage}%)</p>
-                        <p>-£{summary.discount.toFixed(2)}</p>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between text-brand-gray-600">
-                      <p>Shipping</p>
-                      <p>{formData.deliveryMethod === 'express' ? '£5.99' : 'Free'}</p>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="flex justify-between font-semibold text-lg text-brand-gray-700">
-                      <p>Total</p>
-                      <p>£{(summary.total + (formData.deliveryMethod === 'express' ? 5.99 : 0)).toFixed(2)}</p>
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" type="email" {...register('email')} />
+                      {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
                     </div>
                   </div>
-                  
-                  {/* Order items */}
-                  <div className="mt-6">
-                    <h3 className="font-medium text-brand-gray-700 mb-2">Items in your order</h3>
-                    <ul className="space-y-3">
-                      {cartItems.map((item, index) => (
-                        <li key={index} className="flex py-3 border-b border-brand-gray-200 last:border-b-0">
-                          <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md">
-                            <img
-                              src={item.imageUrl}
-                              alt={item.name}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
-                          <div className="ml-3 flex-1">
-                            <p className="text-sm font-medium text-brand-gray-700">{item.name}</p>
-                            <p className="text-xs text-brand-gray-500 mt-1">
-                              Qty: {item.quantity}
-                            </p>
-                            <p className="text-sm text-brand-orange mt-1">£{item.totalPrice.toFixed(2)}</p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+                  <div>
+                    <Label htmlFor="address">Address</Label>
+                    <Input id="address" {...register('address')} />
+                    {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="city">City</Label>
+                      <Input id="city" {...register('city')} />
+                      {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>}
+                    </div>
+                    <div>
+                      <Label htmlFor="postalCode">Postal Code</Label>
+                      <Input id="postalCode" {...register('postalCode')} />
+                      {errors.postalCode && <p className="text-red-500 text-sm mt-1">{errors.postalCode.message}</p>}
+                    </div>
+                    <div>
+                      <Label htmlFor="country">Country</Label>
+                      <Input id="country" {...register('country')} />
+                      {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country.message}</p>}
+                    </div>
                   </div>
                 </CardContent>
-              </Card>
-            </div>
+              </form>
+            </Card>
+
+            <Card className="mt-6">
+                <CardHeader>
+                    <CardTitle>Payment Method</CardTitle>
+                    <CardDescription>Select your payment method.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Tabs defaultValue="stripe" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="stripe">Credit Card (Stripe)</TabsTrigger>
+                            <TabsTrigger value="paypal">PayPal</TabsTrigger>
+                        </TabsList>
+
+                        {/* Stripe Tab Content */}
+                        <TabsContent value="stripe" className="mt-4">
+                            <Elements stripe={stripePromise} options={{ /* appearance API options can go here */ }}>
+                                <StripeCheckoutForm
+                                    totalAmount={totalAmount}
+                                    currency={paypalOptions.currency} // Use consistent currency
+                                    formData={currentFormData} // Pass validated form data
+                                    cart={cart}
+                                    onPaymentSuccess={handlePaymentSuccess}
+                                    onError={handlePaymentError}
+                                    isProcessing={isProcessing}
+                                    setIsProcessing={setIsProcessing}
+                                />
+                            </Elements>
+                        </TabsContent>
+
+                        {/* PayPal Tab Content */}
+                        <TabsContent value="paypal" className="mt-4">
+                            {/* We need currentFormData to exist before showing PayPal buttons */}
+                            {!currentFormData && <p className="text-center text-muted-foreground text-sm py-4">Please fill in shipping details above to enable PayPal checkout.</p>}
+                            {currentFormData && !isProcessing && (
+                                <PayPalButtons
+                                    style={{ layout: 'vertical', color: 'blue', shape: 'rect', label: 'pay' }}
+                                    disabled={isProcessing} // Disable only when processing payment
+                                    createOrder={async (data: CreateOrderData, actions: CreateOrderActions) => {
+                                        console.log('Creating PayPal order frontend...', { totalAmount });
+                                        setIsProcessing(true); // Set processing early
+
+                                        // Ensure form data is still valid (it should be watched)
+                                        if (!currentFormData) {
+                                             handlePaymentError('Shipping details missing.');
+                                             setIsProcessing(false);
+                                             throw new Error('Shipping details missing');
+                                        }
+
+                                        try {
+                                            // Call backend to create the order and get Order ID
+                                            const orderId = await createPaypalOrder(totalAmount, paypalOptions.currency);
+                                            console.log('PayPal Order ID from backend:', orderId);
+                                            if (!orderId) throw new Error('Backend did not return PayPal Order ID.');
+                                            return orderId;
+                                        } catch (error: any) {
+                                            console.error('PayPal createOrder error:', error);
+                                            handlePaymentError(error.message || 'Could not initiate PayPal payment.');
+                                            setIsProcessing(false); // Reset on error
+                                            throw error; // Re-throw to signal PayPal SDK about the failure
+                                        }
+                                    }}
+                                    onApprove={async (data: OnApproveData, actions: OnApproveActions) => {
+                                        console.log('PayPal onApprove data:', data);
+                                        if (!actions.order) {
+                                            handlePaymentError('PayPal order actions not available.');
+                                            setIsProcessing(false);
+                                            return;
+                                        }
+                                        // Ensure processing state is true before capture
+                                        if (!isProcessing) setIsProcessing(true);
+                                        try {
+                                            // Server-side capture (preferred):
+                                            const captureDetails = await capturePaypalOrder(data.orderID);
+
+                                            console.log('PayPal Capture Details:', captureDetails);
+                                            if (captureDetails && captureDetails.status === 'COMPLETED') {
+                                                 // Let the main component handle finalization and navigation
+                                                 handlePaymentSuccess({ type: 'paypal', details: captureDetails });
+                                            } else {
+                                                handlePaymentError('PayPal payment capture failed or is pending. Status: ' + (captureDetails?.status || 'Unknown'));
+                                                setIsProcessing(false); // Reset on capture failure
+                                            }
+                                        } catch (error: any) {
+                                            console.error('PayPal capture error:', error);
+                                            handlePaymentError(error.message || 'Failed to capture PayPal payment.');
+                                            setIsProcessing(false); // Reset on capture error
+                                        }
+                                    }}
+                                    onError={(err: any) => { // Added type annotation for err
+                                        console.error('PayPal Button error:', err);
+                                        const message = typeof err === 'object' && err !== null && 'message' in err ? err.message : 'An error occurred with the PayPal payment.';
+                                        handlePaymentError(message);
+                                        setIsProcessing(false); // Ensure processing state is reset
+                                    }}
+                                    onCancel={() => {
+                                        console.log('PayPal payment cancelled.');
+                                        toast({ title: 'Payment Cancelled', description: 'You cancelled the PayPal payment.', variant: 'default' });
+                                        setIsProcessing(false); // Reset processing state on cancel
+                                    }}
+                                />
+                            )}
+                            {isProcessing && <p className='text-center mt-4 text-muted-foreground'>Processing Payment...</p>}
+                        </TabsContent>
+                    </Tabs>
+                </CardContent>
+            </Card>
+          </div>
+
+          <div className="md:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Order Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                 {cart.map((item) => (
+                  <div key={item.productId} className="flex justify-between items-center mb-2 border-b pb-2">
+                    <div>
+                      <p className="font-medium">{item.name}</p>
+                      <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                    </div>
+                    <p>${item.totalPrice.toFixed(2)}</p>
+                  </div>
+                ))}
+                <div className="flex justify-between font-semibold text-lg mt-4">
+                  <p>Total</p>
+                  <p>${totalAmount.toFixed(2)}</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
-    </Layout>
+    </PayPalScriptProvider>
   );
 };
 

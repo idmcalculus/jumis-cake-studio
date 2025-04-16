@@ -1,73 +1,42 @@
-# Welcome to your Lovable project
+# Jumis Cake Studio Ltd
 
-## Project info
+Welcome to Jumis Cake Studio Ltd - your premier destination for exquisite cakes and pastries. We specialize in creating artisanal baked goods that combine exceptional taste with stunning design.
 
-**URL**: https://lovable.dev/projects/70a9c315-1a79-48d6-bbdd-24a2c49279bf
+## About Us
 
-## How can I edit this code?
+Jumis Cake Studio Ltd is a distinguished bakery specializing in freshly baked breads, exquisite pastries, and meticulously crafted cakes for all occasions. With a strong commitment to premium ingredients, artisanal techniques, and exceptional customer service, we have built a reputation for creativity, quality, and customization.
 
-There are several ways of editing your application.
+### Our Vision
+To become the leading bakery known for exceptional taste, unique designs, and unparalleled customer experience.
 
-**Use Lovable**
+### Our Mission
+To deliver high-quality, beautifully crafted baked goods tailored to our clients' unique needs, ensuring every product reflects our passion for creativity and quality.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/70a9c315-1a79-48d6-bbdd-24a2c49279bf) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
+## Technical Stack
 
 This project is built with:
-
 - Vite
 - TypeScript
 - React
 - shadcn-ui
 - Tailwind CSS
+- Stripe (Payment Processing)
+- WhatsApp Integration
 
-## How can I deploy this project?
+## Development
 
-Simply open [Lovable](https://lovable.dev/projects/70a9c315-1a79-48d6-bbdd-24a2c49279bf) and click on Share -> Publish.
+To run this project locally:
 
-## Can I connect a custom domain to my Lovable project?
+```sh
+# Install dependencies
+bun install
 
-Yes, you can!
+# Start development server
+bun run dev
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Branding
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- Primary Color: #FFA500 (Standard Orange)
+- Secondary Color: #FFFFFF (White)
+- Supporting greys for accents

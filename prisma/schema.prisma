@@ -1,0 +1,64 @@
+// prisma/schema.prisma
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Choose your database provider: "postgresql", "mysql", "sqlite", "sqlserver", "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// --- Application Models ---
+
+model Order {
+  id        String  @id @default(cuid()) // Use cuid or uuid based on preference/DB
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  status           String // e.g., "PENDING", "COMPLETED", "FAILED", "REFUNDED" - Consider using an Enum if your DB supports it
+  totalAmount      Float // Store the total amount paid
+  currency         String // e.g., "USD", "GBP"
+
+  // Customer Information (for guest checkout)
+  customerName     String
+  customerEmail    String
+
+  // Shipping Information
+  shippingAddress     String
+  shippingCity        String
+  shippingPostalCode  String
+  shippingCountry     String
+
+  // Payment Information
+  paymentType String // "stripe" or "paypal"
+  paymentId   String @unique // Stripe PaymentIntent ID or PayPal Order ID - should be unique
+
+  // Relation to OrderItems
+  items OrderItem[]
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderId String // Foreign key to Order
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  // Product details at the time of purchase
+  productId   String // The ID of the product in your catalog
+  productName String // The name of the product
+  quantity    Int
+  price       Float  // Price per unit at the time of purchase
+  totalPrice  Float  // quantity * price
+
+  // Store customizations if applicable (using JSON)
+  customizations Json? // Example: { "size": "large", "frosting": "chocolate" }
+
+  @@index([orderId]) // Index for faster lookups by order
+}
+

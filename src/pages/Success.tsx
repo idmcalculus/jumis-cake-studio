@@ -1,40 +1,57 @@
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CheckCircle } from 'lucide-react';
+import { CartItem } from '@/utils/types'; // Import CartItem type
 
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
-import Layout from "@/components/layout/Layout";
-import { Button } from "@/components/ui/button";
-import { CheckCircle } from "lucide-react";
+interface LocationState {
+  orderId?: string;
+  total?: number;
+  items?: CartItem[];
+}
 
-const Success = () => {
-  // In a real app, you might want to fetch order details or verify payment status
-  useEffect(() => {
-    // You could make API calls here to verify order status
-    // This is where you might also track a conversion or send confirmation emails
-  }, []);
-  
+const Success: React.FC = () => {
+  const location = useLocation();
+  const state = location.state as LocationState | null; // Type assertion for state
+
+  // Validate state
+  const isValidState = state && state.orderId && state.total !== undefined && Array.isArray(state.items);
+
   return (
     <Layout>
       <div className="bg-brand-gray-100 py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="bg-card text-card-foreground rounded-lg shadow-lg p-8 text-center">
             <div className="flex justify-center">
               <CheckCircle className="h-16 w-16 text-green-500" />
             </div>
-            <h1 className="text-3xl font-bold text-brand-gray-700 mt-4">Thank You for Your Order!</h1>
-            <p className="text-xl text-brand-gray-600 mt-2">Your order has been placed successfully.</p>
+            <h1 className="text-3xl font-bold text-foreground mt-4">Order Confirmed!</h1>
+            {isValidState ? (
+              <p className="text-xl text-muted-foreground mt-2">Your order ID is <strong>{state.orderId}</strong>. A confirmation email will be sent shortly.</p>
+            ) : (
+              <p className="text-xl text-muted-foreground mt-2">Thank you for your purchase! If you have any questions, please contact support.</p>
+            )}
             
             <div className="mt-8 bg-brand-gray-50 p-6 rounded-lg">
-              <h2 className="text-lg font-semibold text-brand-gray-700 mb-2">Order Details</h2>
-              <div className="space-y-2 text-brand-gray-600">
-                <p>Order ID: <span className="font-medium">#ORD-{Math.floor(100000 + Math.random() * 900000)}</span></p>
-                <p>Date: <span className="font-medium">{new Date().toLocaleDateString()}</span></p>
-                <p>A confirmation email has been sent to your email address.</p>
-              </div>
+              <h2 className="text-lg font-semibold text-foreground mb-2">Order Summary:</h2>
+              {isValidState && state.items && state.items.map((item) => (
+                <div key={item.productId} className="flex justify-between items-center text-sm mb-1">
+                  <span>{item.name} (x{item.quantity})</span>
+                  <span>${item.totalPrice.toFixed(2)}</span>
+                </div>
+              ))}
+              {isValidState && (
+                <div className="flex justify-between font-semibold mt-3 border-t pt-2">
+                  <span>Total:</span>
+                  <span>${state.total?.toFixed(2)}</span>
+                </div>
+              )}
             </div>
             
             <div className="mt-8 p-6 rounded-lg border border-brand-orange/30 bg-brand-orange/5">
-              <h2 className="text-lg font-semibold text-brand-gray-700 mb-2">What's Next?</h2>
-              <p className="text-brand-gray-600">
+              <h2 className="text-lg font-semibold text-foreground mb-2">What's Next?</h2>
+              <p className="text-muted-foreground">
                 We're preparing your order with care and attention. You'll receive an email update when your order is ready for delivery or pickup.
               </p>
             </div>

@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import animatePlugin from 'tailwindcss-animate';
 
 export default {
 	darkMode: ["class"],
@@ -20,7 +21,7 @@ export default {
 		extend: {
 			colors: {
 				brand: {
-					orange: '#FFA500',
+					orange: '#FF5900',
 					white: '#FFFFFF',
 					gray: {
 						100: '#F1F1F1',
@@ -38,7 +39,7 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: '#FFA500',
+					DEFAULT: '#FF5900',
 					foreground: '#FFFFFF'
 				},
 				secondary: {
@@ -105,5 +106,5 @@ export default {
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [animatePlugin],
 } satisfies Config;

@@ -26,7 +26,7 @@ const Products = () => {
     <Layout>
       <div className="bg-brand-gray-100 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-brand-gray-700 mb-6">Our Products</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-6">Our Products</h1>
           
           {/* Category filter */}
           <div className="mb-8 overflow-x-auto">
@@ -60,8 +60,8 @@ const Products = () => {
                     />
                   </div>
                   <CardContent className="p-4">
-                    <h3 className="font-bold text-lg text-brand-gray-700">{product.name}</h3>
-                    <p className="text-brand-gray-500 mt-1 h-12 overflow-hidden">
+                    <h3 className="font-bold text-lg text-foreground">{product.name}</h3>
+                    <p className="text-muted-foreground mt-1 h-12 overflow-hidden">
                       {product.description.substring(0, 80)}...
                     </p>
                     <p className="text-brand-orange font-bold mt-2">
@@ -81,7 +81,7 @@ const Products = () => {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-lg text-brand-gray-500">No products found in this category.</p>
+              <p className="text-lg text-muted-foreground">No products found in this category.</p>
             </div>
           )}
         </div>

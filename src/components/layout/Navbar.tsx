@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Menu, ShoppingCart } from "lucide-react";
@@ -30,7 +29,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const updateCartCount = () => {
-      const savedCart = localStorage.getItem('cart');
+      const savedCart = localStorage.getItem('cartItems');
       if (savedCart) {
         const cartItems = JSON.parse(savedCart);
         setCartCount(cartItems.length);
@@ -62,45 +61,47 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="bg-background border-b border-border sticky top-0 z-50">
+    <nav className="bg-background/95 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex-shrink-0 flex items-center" data-aos="fade-right">
             <Link to="/" className="flex items-center">
-              <span className="text-brand-orange font-bold text-xl mr-2">Jumis</span>
-              <span className="text-brand-gray-600 font-medium text-lg">Cake Studio</span>
+              <span className="text-brand-orange font-bold text-2xl">Jumis</span>
+              <span className="text-foreground font-medium text-xl ml-1">Cake Studio</span>
             </Link>
           </div>
           
           {/* Desktop menu */}
-          <div className="hidden md:flex items-center space-x-8" data-aos="fade-left">
-            <Link to="/" className="text-foreground hover:text-brand-orange font-medium">
+          <div className="hidden md:flex items-center space-x-6" data-aos="fade-left">
+            <Link to="/" className="text-foreground hover:text-brand-orange font-medium text-sm uppercase tracking-wide">
               Home
             </Link>
-            <Link to="/products" className="text-foreground hover:text-brand-orange font-medium">
+            <Link to="/products" className="text-foreground hover:text-brand-orange font-medium text-sm uppercase tracking-wide">
               Products
             </Link>
-            <Link to="/about" className="text-foreground hover:text-brand-orange font-medium">
+            <Link to="/about" className="text-foreground hover:text-brand-orange font-medium text-sm uppercase tracking-wide">
               About
             </Link>
-            <Link to="/contact" className="text-foreground hover:text-brand-orange font-medium">
+            <Link to="/contact" className="text-foreground hover:text-brand-orange font-medium text-sm uppercase tracking-wide">
               Contact
             </Link>
-            <ThemeToggle />
-            <Button asChild variant="ghost" className="relative" data-aos="zoom-in" data-aos-delay="200">
-              <Link to="/cart">
-                <ShoppingCart className="h-5 w-5" />
-                {cartCount > 0 && (
-                  <Badge 
-                    variant="destructive" 
-                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                  >
-                    {cartCount}
-                  </Badge>
-                )}
-                <span className="sr-only">Cart ({cartCount} items)</span>
-              </Link>
-            </Button>
+            <div className="flex items-center space-x-4 ml-2">
+              <ThemeToggle />
+              <Button asChild variant="ghost" size="icon" className="relative hover:bg-transparent" data-aos="zoom-in" data-aos-delay="200">
+                <Link to="/cart">
+                  <ShoppingCart className="h-5 w-5" />
+                  {cartCount > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs bg-brand-orange"
+                    >
+                      {cartCount}
+                    </Badge>
+                  )}
+                  <span className="sr-only">Cart ({cartCount} items)</span>
+                </Link>
+              </Button>
+            </div>
           </div>
           
           {/* Mobile menu button */}

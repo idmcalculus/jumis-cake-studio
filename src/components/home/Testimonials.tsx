@@ -1,4 +1,3 @@
-
 import { Star } from "lucide-react";
 
 const testimonials = [
@@ -30,11 +29,11 @@ const testimonials = [
 
 const Testimonials = () => {
   return (
-    <section className="py-16 bg-white">
+    <section className="py-24 bg-muted/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-brand-gray-700">What Our Customers Say</h2>
-          <p className="mt-4 text-xl text-brand-gray-500">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-foreground mb-4">What Our Customers Say</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Trusted by customers for delicious cakes and exceptional service
           </p>
         </div>
@@ -43,25 +42,25 @@ const Testimonials = () => {
           {testimonials.map((testimonial) => (
             <div 
               key={testimonial.id} 
-              className="bg-brand-gray-100 p-6 rounded-lg shadow-sm"
+              className="bg-card hover:bg-card/80 transition-colors p-8 rounded-xl shadow-sm hover:shadow-md"
             >
-              <div className="flex items-center mb-4">
+              <div className="flex items-center mb-6">
                 <img 
                   src={testimonial.image} 
                   alt={testimonial.name} 
-                  className="h-12 w-12 rounded-full mr-4 object-cover"
+                  className="h-14 w-14 rounded-full mr-4 object-cover ring-2 ring-brand-orange/20"
                 />
                 <div>
-                  <h3 className="text-lg font-semibold text-brand-gray-700">{testimonial.name}</h3>
-                  <p className="text-sm text-brand-gray-500">{testimonial.role}</p>
+                  <h3 className="text-lg font-semibold text-foreground">{testimonial.name}</h3>
+                  <p className="text-sm text-muted-foreground">{testimonial.role}</p>
                 </div>
               </div>
-              <div className="flex mb-3">
+              <div className="flex mb-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
                   <Star key={i} className="h-5 w-5 fill-brand-orange text-brand-orange" />
                 ))}
               </div>
-              <p className="text-brand-gray-600 italic">"{testimonial.content}"</p>
+              <p className="text-muted-foreground leading-relaxed italic">"{testimonial.content}"</p>
             </div>
           ))}
         </div>

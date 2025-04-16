@@ -10,14 +10,19 @@ interface CustomOptionInputProps {
 
 const CustomOptionInput = ({ label, value, onChange }: CustomOptionInputProps) => {
   return (
-    <div className="mt-2" data-aos="fade-up">
-      <Label htmlFor={`custom-${label}`}>Custom {label}</Label>
+    <div className="space-y-2" data-aos="fade-up">
+      <Label 
+        htmlFor={`custom-${label}`}
+        className="text-sm font-medium text-foreground"
+      >
+        Custom {label}
+      </Label>
       <Textarea
         id={`custom-${label}`}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={`Enter your custom ${label.toLowerCase()} details`}
-        className="mt-1"
+        className="min-h-[80px] bg-background resize-none"
       />
     </div>
   );

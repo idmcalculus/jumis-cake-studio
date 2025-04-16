@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MessageSquare, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -114,7 +113,7 @@ const Chatbot = () => {
 
       {/* Chatbot panel */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 w-80 sm:w-96 bg-white rounded-lg shadow-xl z-50 flex flex-col max-h-[500px] border border-brand-gray-200">
+        <div className="fixed bottom-24 right-6 w-80 sm:w-96 bg-card text-card-foreground rounded-lg shadow-xl z-50 flex flex-col max-h-[500px] border border-border">
           {/* Chatbot header */}
           <div className="bg-brand-orange text-white p-4 rounded-t-lg">
             <div className="flex items-center justify-between">
@@ -131,7 +130,7 @@ const Chatbot = () => {
           </div>
 
           {/* Chat messages */}
-          <div className="flex-1 p-4 overflow-y-auto bg-brand-gray-100 min-h-[300px] max-h-[300px]">
+          <div className="flex-1 p-4 overflow-y-auto bg-muted text-muted-foreground min-h-[300px] max-h-[300px]">
             {messages.map((msg, index) => (
               <div 
                 key={index}
@@ -141,7 +140,7 @@ const Chatbot = () => {
                   className={`inline-block p-3 rounded-lg ${
                     msg.type === 'user'
                       ? 'bg-brand-orange text-white'
-                      : 'bg-white text-brand-gray-600'
+                      : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {msg.type === 'bot' ? (
@@ -155,12 +154,12 @@ const Chatbot = () => {
           </div>
 
           {/* Chat input */}
-          <div className="p-4 border-t border-brand-gray-200">
+          <div className="p-4 border-t border-border">
             <div className="flex">
               <input
                 type="text"
                 placeholder="Type your message..."
-                className="flex-1 p-2 border border-brand-gray-200 rounded-l-md focus:outline-none focus:ring-1 focus:ring-brand-orange"
+                className="flex-1 p-2 border border-border rounded-l-md focus:outline-none focus:ring-1 focus:ring-brand-orange"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -172,7 +171,7 @@ const Chatbot = () => {
                 <Send className="h-5 w-5" />
               </Button>
             </div>
-            <div className="text-xs text-brand-gray-400 mt-2 text-center">
+            <div className="text-xs text-muted-foreground mt-2 text-center">
               Need to talk to a human? <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer" className="text-brand-orange">Chat with us on WhatsApp</a>
             </div>
           </div>
