@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, ShoppingCart } from "lucide-react";
+import { Menu, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -10,6 +10,7 @@ import {
   SheetTrigger 
 } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import "aos/dist/aos.css";
 import AOS from "aos";
 
@@ -61,7 +62,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="bg-white border-b border-brand-gray-100 sticky top-0 z-50">
+    <nav className="bg-background border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex-shrink-0 flex items-center" data-aos="fade-right">
@@ -73,18 +74,19 @@ const Navbar = () => {
           
           {/* Desktop menu */}
           <div className="hidden md:flex items-center space-x-8" data-aos="fade-left">
-            <Link to="/" className="text-brand-gray-500 hover:text-brand-orange font-medium">
+            <Link to="/" className="text-foreground hover:text-brand-orange font-medium">
               Home
             </Link>
-            <Link to="/products" className="text-brand-gray-500 hover:text-brand-orange font-medium">
+            <Link to="/products" className="text-foreground hover:text-brand-orange font-medium">
               Products
             </Link>
-            <Link to="/about" className="text-brand-gray-500 hover:text-brand-orange font-medium">
+            <Link to="/about" className="text-foreground hover:text-brand-orange font-medium">
               About
             </Link>
-            <Link to="/contact" className="text-brand-gray-500 hover:text-brand-orange font-medium">
+            <Link to="/contact" className="text-foreground hover:text-brand-orange font-medium">
               Contact
             </Link>
+            <ThemeToggle />
             <Button asChild variant="ghost" className="relative" data-aos="zoom-in" data-aos-delay="200">
               <Link to="/cart">
                 <ShoppingCart className="h-5 w-5" />
@@ -102,7 +104,8 @@ const Navbar = () => {
           </div>
           
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center space-x-2">
+            <ThemeToggle />
             <Sheet>
               <SheetTrigger asChild>
                 <Button 
@@ -120,14 +123,14 @@ const Navbar = () => {
                       <Link
                         key={item.path}
                         to={item.path}
-                        className="text-brand-gray-600 hover:text-brand-orange font-medium py-2"
+                        className="text-foreground hover:text-brand-orange font-medium py-2"
                       >
                         {item.label}
                       </Link>
                     ))}
                     <Link
                       to="/cart"
-                      className="text-brand-gray-600 hover:text-brand-orange font-medium py-2"
+                      className="text-foreground hover:text-brand-orange font-medium py-2"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
