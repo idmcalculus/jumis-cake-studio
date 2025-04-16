@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -15,6 +14,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { CakeProduct, PastryProduct, CartItem } from "@/utils/types";
 import "aos/dist/aos.css";
 import AOS from "aos";
+import CustomOptionInput from "@/components/order/CustomOptionInput";
 
 const OrderFlow = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +30,10 @@ const OrderFlow = () => {
   const [cakeDecorations, setCakeDecorations] = useState<string>("");
   // Pastry customizations
   const [pastrySize, setPastrySize] = useState<'small' | 'midi' | 'large'>('small');
+  const [cakeShape, setCakeShape] = useState<'round' | 'square' | 'heart' | 'custom'>('round');
+  const [customFlavor, setCustomFlavor] = useState('');
+  const [customFrosting, setCustomFrosting] = useState('');
+  const [customDecorations, setCustomDecorations] = useState('');
 
   // Initialize AOS
   useEffect(() => {
@@ -72,7 +76,6 @@ const OrderFlow = () => {
     return product.price * quantity;
   };
   
-  // Add item to cart
   const handleAddToCart = () => {
     if (!product) return;
     
@@ -91,11 +94,12 @@ const OrderFlow = () => {
     // Add cake customizations
     if (isCake(product)) {
       cartItem.customizations = {
+        shape: cakeShape,
         size: cakeSize,
         layers: cakeLayers,
-        flavor: cakeFlavor || product.flavors[0],
-        frosting: cakeFrosting || (product.frostings && product.frostings[0]),
-        decorations: cakeDecorations || (product.decorOptions && product.decorOptions[0]),
+        flavor: cakeFlavor === 'custom' ? customFlavor : cakeFlavor,
+        frosting: cakeFrosting === 'custom' ? customFrosting : cakeFrosting,
+        decorations: cakeDecorations === 'custom' ? customDecorations : cakeDecorations,
       };
     }
     
@@ -167,6 +171,25 @@ const OrderFlow = () => {
                   {/* Cake customizations */}
                   {isCake(product) && (
                     <div className="space-y-6">
+                      {/* Cake shape */}
+                      <div data-aos="fade-up" data-aos-delay="100">
+                        <Label htmlFor="cake-shape">Cake Shape</Label>
+                        <Select 
+                          value={cakeShape}
+                          onValueChange={(value: 'round' | 'square' | 'heart' | 'custom') => setCakeShape(value)}
+                        >
+                          <SelectTrigger id="cake-shape" className="w-full">
+                            <SelectValue placeholder="Select shape" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="round">Round</SelectItem>
+                            <SelectItem value="square">Square</SelectItem>
+                            <SelectItem value="heart">Heart</SelectItem>
+                            <SelectItem value="custom">Custom Shape</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
                       {/* Cake size */}
                       <div data-aos="fade-up" data-aos-delay="100">
                         <Label htmlFor="cake-size">Cake Size (inches)</Label>
@@ -224,11 +247,18 @@ const OrderFlow = () => {
                             <SelectValue placeholder="Select flavor" />
                           </SelectTrigger>
                           <SelectContent>
-                            {product.flavors.map((flavor) => (
+                            {[...product.flavors, "custom"].map((flavor) => (
                               <SelectItem key={flavor} value={flavor}>{flavor}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
+                        {cakeFlavor === 'custom' && (
+                          <CustomOptionInput
+                            label="Flavor"
+                            value={customFlavor}
+                            onChange={setCustomFlavor}
+                          />
+                        )}
                       </div>
                       
                       {/* Frosting */}
@@ -243,11 +273,18 @@ const OrderFlow = () => {
                               <SelectValue placeholder="Select frosting" />
                             </SelectTrigger>
                             <SelectContent>
-                              {product.frostings.map((frosting) => (
+                              {[...product.frostings, "custom"].map((frosting) => (
                                 <SelectItem key={frosting} value={frosting}>{frosting}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
+                          {cakeFrosting === 'custom' && (
+                            <CustomOptionInput
+                              label="Frosting"
+                              value={customFrosting}
+                              onChange={setCustomFrosting}
+                            />
+                          )}
                         </div>
                       )}
                       
@@ -263,11 +300,18 @@ const OrderFlow = () => {
                               <SelectValue placeholder="Select decorations" />
                             </SelectTrigger>
                             <SelectContent>
-                              {product.decorOptions.map((decoration) => (
+                              {[...product.decorOptions, "custom"].map((decoration) => (
                                 <SelectItem key={decoration} value={decoration}>{decoration}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
+                          {cakeDecorations === 'custom' && (
+                            <CustomOptionInput
+                              label="Decorations"
+                              value={customDecorations}
+                              onChange={setCustomDecorations}
+                            />
+                          )}
                         </div>
                       )}
                     </div>

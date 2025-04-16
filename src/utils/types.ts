@@ -36,6 +36,7 @@ export interface CartItem {
   basePrice: number;
   totalPrice: number;
   customizations: {
+    shape?: 'round' | 'square' | 'heart' | 'custom';
     size?: number | string;
     layers?: number;
     flavor?: string;
