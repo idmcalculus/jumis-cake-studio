@@ -4,10 +4,21 @@ import { Link } from "react-router-dom";
 import { Menu, X, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import "aos/dist/aos.css";
+import AOS from "aos";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+
+  // Initialize AOS
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      once: true,
+      easing: 'ease-in-out'
+    });
+  }, []);
 
   useEffect(() => {
     const updateCartCount = () => {
@@ -39,7 +50,7 @@ const Navbar = () => {
     <nav className="bg-white border-b border-brand-gray-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex-shrink-0 flex items-center">
+          <div className="flex-shrink-0 flex items-center" data-aos="fade-right">
             <Link to="/" className="flex items-center">
               <span className="text-brand-orange font-bold text-xl mr-2">Jumis</span>
               <span className="text-brand-gray-600 font-medium text-lg">Cake Studio</span>
@@ -47,7 +58,7 @@ const Navbar = () => {
           </div>
           
           {/* Desktop menu */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-8" data-aos="fade-left">
             <Link to="/" className="text-brand-gray-500 hover:text-brand-orange font-medium">
               Home
             </Link>
@@ -60,7 +71,7 @@ const Navbar = () => {
             <Link to="/contact" className="text-brand-gray-500 hover:text-brand-orange font-medium">
               Contact
             </Link>
-            <Button asChild variant="ghost" className="relative">
+            <Button asChild variant="ghost" className="relative" data-aos="zoom-in" data-aos-delay="200">
               <Link to="/cart">
                 <ShoppingCart className="h-5 w-5" />
                 {cartCount > 0 && (

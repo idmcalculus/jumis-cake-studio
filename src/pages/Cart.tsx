@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -6,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { CartItem, OrderSummary } from "@/utils/types";
 import { calculateOrderSummary } from "@/utils/priceCalculator";
 import { Trash2, ShoppingBag } from "lucide-react";
+import "aos/dist/aos.css";
+import AOS from "aos";
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -17,6 +20,15 @@ const Cart = () => {
   });
   
   const navigate = useNavigate();
+  
+  // Initialize AOS
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      once: true,
+      easing: 'ease-in-out'
+    });
+  }, []);
   
   // Load cart from localStorage
   useEffect(() => {
@@ -36,6 +48,12 @@ const Cart = () => {
     newCart.splice(index, 1);
     setCartItems(newCart);
     
+    // Save updated cart
+    localStorage.setItem('cart', JSON.stringify(newCart));
+    
+    // Update order summary
+    setSummary(calculateOrderSummary(newCart));
+    
     // Show toast for removed item
     toast.success(`${removedItem.name} removed from cart`);
     
@@ -49,12 +67,24 @@ const Cart = () => {
     
     const newCart = [...cartItems];
     const item = newCart[index];
-    newCart[index].quantity = quantity;
-    // Recalculate total price
-    const baseItemPrice = newCart[index].totalPrice / newCart[index].quantity;
-    newCart[index].totalPrice = baseItemPrice * quantity;
     
+    // Calculate price per single item
+    const singleItemPrice = item.basePrice;
+    
+    // Update item quantity
+    newCart[index].quantity = quantity;
+    
+    // Recalculate total price based on the updated quantity
+    newCart[index].totalPrice = singleItemPrice * quantity;
+    
+    // Save updated cart
+    localStorage.setItem('cart', JSON.stringify(newCart));
+    
+    // Update cart items state
     setCartItems(newCart);
+    
+    // Update order summary
+    setSummary(calculateOrderSummary(newCart));
     
     // Show toast for quantity update
     toast.success(`${item.name} quantity updated to ${quantity}`);
@@ -72,10 +102,10 @@ const Cart = () => {
     <Layout>
       <div className="bg-brand-gray-100 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-brand-gray-700 mb-8">Shopping Cart</h1>
+          <h1 className="text-3xl font-bold text-brand-gray-700 mb-8" data-aos="fade-up">Shopping Cart</h1>
           
           {cartItems.length === 0 ? (
-            <div className="bg-white p-8 rounded-lg shadow text-center">
+            <div className="bg-white p-8 rounded-lg shadow text-center" data-aos="fade-up">
               <ShoppingBag className="mx-auto h-16 w-16 text-brand-gray-400 mb-4" />
               <h2 className="text-2xl font-bold text-brand-gray-700 mb-2">Your cart is empty</h2>
               <p className="text-brand-gray-500 mb-6">
@@ -89,7 +119,7 @@ const Cart = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Cart Items */}
               <div className="md:col-span-2">
-                <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="bg-white rounded-lg shadow overflow-hidden" data-aos="fade-right">
                   <div className="p-6 border-b border-brand-gray-200">
                     <h2 className="text-xl font-semibold text-brand-gray-700">
                       {cartItems.length} {cartItems.length === 1 ? 'Item' : 'Items'}
@@ -98,7 +128,7 @@ const Cart = () => {
                   
                   <ul className="divide-y divide-brand-gray-200">
                     {cartItems.map((item, index) => (
-                      <li key={index} className="p-6">
+                      <li key={index} className="p-6" data-aos="fade-up" data-aos-delay={index * 100}>
                         <div className="flex flex-col sm:flex-row">
                           {/* Item image */}
                           <div className="w-full sm:w-24 h-24 flex-shrink-0 mb-4 sm:mb-0">
@@ -189,7 +219,7 @@ const Cart = () => {
               
               {/* Order Summary */}
               <div className="md:col-span-1">
-                <div className="bg-white rounded-lg shadow p-6 sticky top-20">
+                <div className="bg-white rounded-lg shadow p-6 sticky top-20" data-aos="fade-left">
                   <h2 className="text-xl font-semibold text-brand-gray-700 mb-4">Order Summary</h2>
                   
                   <div className="space-y-3 text-brand-gray-600">
@@ -212,7 +242,7 @@ const Cart = () => {
                   </div>
                   
                   {summary.discount > 0 && (
-                    <div className="mt-4 p-3 bg-green-50 text-green-700 text-sm rounded-md">
+                    <div className="mt-4 p-3 bg-green-50 text-green-700 text-sm rounded-md" data-aos="fade-up">
                       <p>You're saving £{summary.discount.toFixed(2)} with our bulk discount!</p>
                     </div>
                   )}
@@ -221,6 +251,7 @@ const Cart = () => {
                     <Button
                       className="w-full bg-brand-orange hover:bg-brand-orange/90"
                       onClick={handleCheckout}
+                      data-aos="zoom-in"
                     >
                       Proceed to Checkout
                     </Button>
@@ -229,6 +260,8 @@ const Cart = () => {
                       asChild
                       variant="outline"
                       className="w-full mt-3"
+                      data-aos="zoom-in"
+                      data-aos-delay="100"
                     >
                       <Link to="/products">Continue Shopping</Link>
                     </Button>

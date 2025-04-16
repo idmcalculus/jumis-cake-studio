@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import Layout from "@/components/layout/Layout";
@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { CakeProduct, PastryProduct, CartItem } from "@/utils/types";
+import "aos/dist/aos.css";
+import AOS from "aos";
 
 const OrderFlow = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +30,15 @@ const OrderFlow = () => {
   const [cakeDecorations, setCakeDecorations] = useState<string>("");
   // Pastry customizations
   const [pastrySize, setPastrySize] = useState<'small' | 'midi' | 'large'>('small');
+
+  // Initialize AOS
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      once: true,
+      easing: 'ease-in-out'
+    });
+  }, []);
 
   // Type guards
   const isCake = (product: any): product is CakeProduct => {
@@ -73,7 +84,7 @@ const OrderFlow = () => {
       imageUrl: product.imageUrl,
       quantity: quantity,
       basePrice: product.price,
-      totalPrice: itemPrice,
+      totalPrice: itemPrice * quantity,
       customizations: {}
     };
     
@@ -129,11 +140,11 @@ const OrderFlow = () => {
     <Layout>
       <div className="bg-brand-gray-100 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-brand-gray-700 mb-6">Customize Your Order</h1>
+          <h1 className="text-3xl font-bold text-brand-gray-700 mb-6" data-aos="fade-up">Customize Your Order</h1>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Product Image */}
-            <div className="md:col-span-1">
+            <div className="md:col-span-1" data-aos="fade-right">
               <Card>
                 <div className="p-4">
                   <img 
@@ -148,7 +159,7 @@ const OrderFlow = () => {
             </div>
             
             {/* Customization Form */}
-            <div className="md:col-span-2">
+            <div className="md:col-span-2" data-aos="fade-left">
               <Card>
                 <CardContent className="p-6">
                   <h2 className="text-xl font-bold text-brand-gray-700 mb-4">Customize Your {isCake(product) ? 'Cake' : 'Order'}</h2>
@@ -157,7 +168,7 @@ const OrderFlow = () => {
                   {isCake(product) && (
                     <div className="space-y-6">
                       {/* Cake size */}
-                      <div>
+                      <div data-aos="fade-up" data-aos-delay="100">
                         <Label htmlFor="cake-size">Cake Size (inches)</Label>
                         <Select 
                           value={cakeSize.toString()} 
@@ -185,7 +196,7 @@ const OrderFlow = () => {
                       </div>
                       
                       {/* Number of layers */}
-                      <div>
+                      <div data-aos="fade-up" data-aos-delay="200">
                         <Label htmlFor="cake-layers">Number of Layers</Label>
                         <RadioGroup 
                           id="cake-layers" 
@@ -203,7 +214,7 @@ const OrderFlow = () => {
                       </div>
                       
                       {/* Flavor */}
-                      <div>
+                      <div data-aos="fade-up" data-aos-delay="300">
                         <Label htmlFor="cake-flavor">Flavor</Label>
                         <Select 
                           value={cakeFlavor} 
@@ -222,7 +233,7 @@ const OrderFlow = () => {
                       
                       {/* Frosting */}
                       {product.frostings && (
-                        <div>
+                        <div data-aos="fade-up" data-aos-delay="400">
                           <Label htmlFor="cake-frosting">Frosting</Label>
                           <Select 
                             value={cakeFrosting} 
@@ -242,7 +253,7 @@ const OrderFlow = () => {
                       
                       {/* Decorations */}
                       {product.decorOptions && (
-                        <div>
+                        <div data-aos="fade-up" data-aos-delay="500">
                           <Label htmlFor="cake-decorations">Decorations</Label>
                           <Select 
                             value={cakeDecorations} 
@@ -267,7 +278,7 @@ const OrderFlow = () => {
                     <div className="space-y-6">
                       {/* Size options */}
                       {product.sizes && (
-                        <div>
+                        <div data-aos="fade-up" data-aos-delay="100">
                           <Label>Size</Label>
                           <RadioGroup 
                             value={pastrySize}
@@ -307,7 +318,7 @@ const OrderFlow = () => {
                       
                       {/* Pack quantity info */}
                       {product.packQuantity && (
-                        <div className="bg-brand-gray-100 p-3 rounded-md">
+                        <div className="bg-brand-gray-100 p-3 rounded-md" data-aos="fade-up" data-aos-delay="200">
                           <p className="text-brand-gray-700">
                             Sold in packs of {product.packQuantity}
                             {product.packQuantity === 5 && " pieces"}
@@ -318,7 +329,7 @@ const OrderFlow = () => {
                   )}
                   
                   {/* Quantity */}
-                  <div className="mt-6">
+                  <div className="mt-6" data-aos="fade-up" data-aos-delay="200">
                     <Label htmlFor="quantity">Quantity</Label>
                     <div className="flex items-center mt-2">
                       <Button
@@ -352,7 +363,7 @@ const OrderFlow = () => {
                   <Separator className="my-6" />
                   
                   {/* Order summary */}
-                  <div>
+                  <div data-aos="fade-up" data-aos-delay="300">
                     <h3 className="text-lg font-semibold text-brand-gray-700 mb-2">Order Summary</h3>
                     <div className="space-y-2">
                       <div className="flex justify-between">
@@ -415,6 +426,8 @@ const OrderFlow = () => {
                   <Button 
                     onClick={handleAddToCart}
                     className="w-full bg-brand-orange hover:bg-brand-orange/90"
+                    data-aos="zoom-in" 
+                    data-aos-delay="400"
                   >
                     Add to Cart
                   </Button>
