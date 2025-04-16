@@ -13,7 +13,6 @@ const Footer = () => {
               Premium quality, beautifully crafted baked goods tailored to our clients' unique needs.
             </p>
             <div className="flex space-x-4">
-              {/* Use the SocialIcons component */}
               <SocialIcons />
             </div>
           </div>

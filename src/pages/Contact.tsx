@@ -110,7 +110,7 @@ const Contact = () => {
                 <p className="text-muted-foreground mb-4">
                   Stay updated with our latest creations and promotions on social media.
                 </p>
-                <div className="flex space-x-4 justify-center">
+                <div className="flex space-x-4">
                   <SocialIcons iconSize={28} />
                 </div>
               </Card>

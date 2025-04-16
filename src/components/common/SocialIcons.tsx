@@ -1,13 +1,11 @@
 import React from 'react';
 import { SiInstagram, SiFacebook, SiWhatsapp, SiTiktok } from 'react-icons/si';
-import { Link } from 'react-router-dom'; // Assuming you use react-router for links
 
-// Define social media links (replace with actual links)
 const socialLinks = {
   instagram: 'https://instagram.com/jumiscakestudio',
   facebook: 'https://facebook.com/jumiscakestudio',
-  whatsapp: 'https://wa.me/YOUR_WHATSAPP_NUMBER', // Replace with your WhatsApp number link
-  tiktok: 'https://tiktok.com/@jumiscakestudio',
+  whatsapp: 'https://wa.me/+447467548812',
+  tiktok: 'https://tiktok.com/@jumiscakes_events',
 };
 
 interface SocialIconsProps {
